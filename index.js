@@ -10,7 +10,7 @@ const secretkey=process.env.JWT_SECRET_KEY;
 const transporter=require('./email');
 
 app.use(cors({
-    origin:["https://demo-frontend-three.vercel.app/"],
+    origin:["https://demo-frontend-three.vercel.app","http://localhost:3000"],
     methods:["POST", "GET"],
     credentials:true
 }));
