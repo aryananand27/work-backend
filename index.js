@@ -9,7 +9,13 @@ const bcrypt=require('bcrypt');
 const secretkey=process.env.JWT_SECRET_KEY;
 const transporter=require('./email');
 
-app.use(cors());
+app.use(cors(
+    {
+       origin:["*"],
+    methods:["POST", "GET"],
+    credentials:true
+    }
+));
 app.use(express.json());
 
 app.get('/',(req,resp)=>{
