@@ -11,9 +11,9 @@ const transporter=require('./email');
 
 app.use(cors(
     {
-       origin:"https://demo-frontend-three.vercel.app",
-    methods:["POST", "GET"],
-    credentials:true
+       origin: 'https://demo-frontend-three.vercel.app', // Allow this origin
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
+  credentials: true,
     }
 ));
 app.use(express.json());
