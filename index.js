@@ -9,7 +9,11 @@ const bcrypt=require('bcrypt');
 const secretkey=process.env.JWT_SECRET_KEY;
 const transporter=require('./email');
 
-app.use(cors());
+app.use(cors({
+    origin:["https://demo-frontend-three.vercel.app/"],
+    methods:["POST", "GET"],
+    credentials:true
+}));
 app.use(express.json());
 
 app.get('/',(req,resp)=>{
