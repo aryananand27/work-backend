@@ -8,6 +8,9 @@ const jwt=require('jsonwebtoken');
 const bcrypt=require('bcrypt');
 const secretkey=process.env.JWT_SECRET_KEY;
 const transporter=require('./email');
+const PostModel=require('./Models/Posts');
+const {ObjectId}=require('mongodb')
+const upload=require('./upload');
 
 app.use(cors());
 app.use(express.json());
@@ -111,8 +114,79 @@ app.post('/reset/:id/:token',async(req,resp)=>{
         resp.send({err:"Field is required."})
     }
     
+});
+
+app.post('/posts',async(req,resp)=>{
+    try{
+        const result= new PostModel(req.body);
+        const data=await result.save();
+        resp.send({result:data});
+    }catch(err){
+        resp.send({error:err});
+    }
+})
+app.get('/getposts',async(req,resp)=>{
+    const result=await PostModel.find();
+    if(result){
+        resp.send(result);
+    }
+    else{
+        resp.send({reslt:"No Data Available."})
+    }
+})
+app.get('/getpost/:id',async(req,resp)=>{
+    if(req.params.id){
+        let result=await PostModel.findOne({_id:new ObjectId(req.params.id)});
+        if(result){
+            resp.send(result);
+        }
+        else{
+            resp.send({reslt:"NotFound"});
+        }
+    }
+    else{
+        resp.send({reslt:"Not authorized user."});
+    }
+})
+app.put('/likes/:id',async(req,resp)=>{
+    if(req.params.id){
+        const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$inc:{likecount:1}});
+        resp.send(result);
+    }
+    else{
+        resp.send({reslt:"Cannot like post"});
+    }
+})
+app.put('/dislikes/:id',async(req,resp)=>{
+    if(req.params.id){
+        const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$inc:{likecount:-1}});
+        resp.send(result);
+    }
+    else{
+        resp.send({reslt:"Cannot like post"});
+    }
 })
 
+app.put('/messages/:id',async(req,resp)=>{
+    if(req.params.id){
+        const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$push:{comments:req.body}})
+        resp.send({result});
+    }
+    else{
+        resp.send({reslt:"Cannot comment post"});
+    }
+})
+
+app.post('/upload', upload.single('file'), (req, res) => {
+    try {
+      res.send({ fileUrl: req.file.path });
+    }
+     catch (err) {
+      res.send({ err: 'Failed to upload file' });
+    }
+  });
 
 
-app.listen(7000);
+
+
+app.listen(8000);
