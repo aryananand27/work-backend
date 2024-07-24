@@ -23,4 +23,4 @@ UserSchema.pre('save',async function(next){
    
     next();
 })
-module.exports=mongoose.model('demousers',UserSchema);
+module.exports=mongoose.model('banaousers',UserSchema);

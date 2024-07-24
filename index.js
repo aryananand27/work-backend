@@ -15,6 +15,30 @@ const upload=require('./upload');
 app.use(cors());
 app.use(express.json());
 
+
+// Middleware for Authentication through JWT Token.......
+const authToken=(req,resp,next)=>{
+    let token=req.headers['authorization'];
+   
+    if(token){
+        token=token.split(' ')[1];
+        console.log(token);
+        jwt.verify(token,secretkey,(err,verify)=>{
+            if(err){
+                resp.send({reslt:"Please Provide Valid Token."});
+            }
+            else{
+                next();
+            }
+        });
+    }else{
+        resp.send({reslt:"Please Provide Token."});
+    }
+  
+}
+
+
+
 app.get('/',(req,resp)=>{
     resp.send('connection set up');
 })
@@ -96,6 +120,10 @@ app.post('/reset/:id/:token',async(req,resp)=>{
     if(req.body.password){
         req.body.password=await bcrypt.hash(req.body.password,10);
         if(req.params.token){
+            
+// ***************************** Below Verifying the auth token From mail *********************************** 
+
+
             jwt.verify(req.params.token,secretkey,async(err,verify)=>{
                 if(err){
                     resp.send({err:"Not Authorized user"});
@@ -116,16 +144,17 @@ app.post('/reset/:id/:token',async(req,resp)=>{
     
 });
 
-app.post('/posts',async(req,resp)=>{
+app.post('/posts',authToken,async(req,resp)=>{
     try{
         const result= new PostModel(req.body);
+        
         const data=await result.save();
         resp.send({result:data});
     }catch(err){
         resp.send({error:err});
     }
 })
-app.get('/getposts',async(req,resp)=>{
+app.get('/getposts',authToken,async(req,resp)=>{
     const result=await PostModel.find();
     if(result){
         resp.send(result);
@@ -134,7 +163,7 @@ app.get('/getposts',async(req,resp)=>{
         resp.send({reslt:"No Data Available."})
     }
 })
-app.get('/getpost/:id',async(req,resp)=>{
+app.get('/getpost/:id',authToken,async(req,resp)=>{
     if(req.params.id){
         let result=await PostModel.findOne({_id:new ObjectId(req.params.id)});
         if(result){
@@ -148,7 +177,7 @@ app.get('/getpost/:id',async(req,resp)=>{
         resp.send({reslt:"Not authorized user."});
     }
 })
-app.put('/likes/:id',async(req,resp)=>{
+app.put('/likes/:id',authToken ,async(req,resp)=>{
     if(req.params.id){
         const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$inc:{likecount:1}});
         resp.send(result);
@@ -157,7 +186,7 @@ app.put('/likes/:id',async(req,resp)=>{
         resp.send({reslt:"Cannot like post"});
     }
 })
-app.put('/dislikes/:id',async(req,resp)=>{
+app.put('/dislikes/:id',authToken,async(req,resp)=>{
     if(req.params.id){
         const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$inc:{likecount:-1}});
         resp.send(result);
@@ -167,7 +196,7 @@ app.put('/dislikes/:id',async(req,resp)=>{
     }
 })
 
-app.put('/messages/:id',async(req,resp)=>{
+app.put('/messages/:id',authToken,async(req,resp)=>{
     if(req.params.id){
         const result=await PostModel.updateOne({_id:new ObjectId(req.params.id)},{$push:{comments:req.body}})
         resp.send({result});
@@ -177,7 +206,7 @@ app.put('/messages/:id',async(req,resp)=>{
     }
 })
 
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload',  upload.single('file'), (req, res) => {
     try {
       res.send({ fileUrl: req.file.path });
     }
@@ -187,6 +216,11 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 
 
-
+  app.use((req,res,next)=>{
+    res.setHeader('Access-Control-Allow-Origin','*');
+    res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,PATCH,DELETE');
+    res.setHeader('Access-Control-Allow-Methods','Content-Type','Authorization');
+    next(); 
+})
 
 app.listen(8000);
